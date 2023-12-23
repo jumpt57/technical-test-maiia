@@ -11,8 +11,6 @@ import com.maiia.pro.repository.TimeSlotRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -24,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
-@Transactional
 class ProAvailabilityServiceTest {
     private final  EntityFactory entityFactory = new EntityFactory();
     private  final static Integer patient_id=657679;
@@ -70,7 +67,7 @@ class ProAvailabilityServiceTest {
 
         availabilityRepository.save(Availability.builder().practitionerId(practitioner.getId()).startDate(startDate).endDate(startDate.plusMinutes(15)).build());
         availabilityRepository.save(Availability.builder().practitionerId(practitioner.getId()).startDate(startDate.plusMinutes(15)).endDate(startDate.plusMinutes(30)).build());
-        availabilityRepository.save(Availability.builder().practitionerId(practitioner.getId()).startDate(startDate.plusMinutes(30)).endDate(startDate.plusMinutes(45)).build());
+        availabilityRepository.save(Availability.builder().practitionerId(practitioner.getId()).startDate(startDate.plusMinutes(50)).endDate(startDate.plusMinutes(45)).build());
         availabilityRepository.save(Availability.builder().practitionerId(practitioner.getId()).startDate(startDate.plusMinutes(45)).endDate(startDate.plusHours(1)).build());
 
         proAvailabilityService.generateAvailabilities(practitioner.getId());
