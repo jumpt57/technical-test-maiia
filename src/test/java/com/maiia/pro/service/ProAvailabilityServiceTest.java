@@ -1,6 +1,7 @@
 package com.maiia.pro.service;
 
 import com.maiia.pro.EntityFactory;
+import com.maiia.pro.entity.Appointment;
 import com.maiia.pro.entity.Availability;
 import com.maiia.pro.entity.Practitioner;
 import com.maiia.pro.repository.AppointmentRepository;
@@ -10,6 +11,8 @@ import com.maiia.pro.repository.TimeSlotRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -21,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
+@Transactional
 class ProAvailabilityServiceTest {
     private final  EntityFactory entityFactory = new EntityFactory();
     private  final static Integer patient_id=657679;

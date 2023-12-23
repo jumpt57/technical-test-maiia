@@ -27,4 +27,9 @@ public class ProAppointmentController {
     public List<Appointment> getAppointments() {
         return proAppointmentService.findAll();
     }
+
+    @PostMapping
+    public Appointment create(Appointment appointment) {
+        return proAppointmentService.create(appointment);
+    }
 }

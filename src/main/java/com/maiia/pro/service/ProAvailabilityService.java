@@ -36,47 +36,52 @@ public class ProAvailabilityService {
 
         List<TimeSlot> timeSlots = timeSlotRepository.findByPractitionerId(practitionerId);
         List<Availability> currentAvailabilities = availabilityRepository.findByPractitionerId(practitionerId);
+        List<Appointment> currentAppointments = appointmentRepository.findByPractitionerId(practitionerId);
 
         return timeSlots.stream()
-            .flatMap(timeSlot -> generateIntervals(timeSlot).stream())
+            .flatMap(timeSlot -> generateIntervals(currentAppointments, timeSlot).stream())
             .filter(newAvailibility -> !currentAvailabilities.stream()
                 .anyMatch(availibility -> availibility.getStartDate().isEqual(newAvailibility.getStartDate()) && availibility.getEndDate().isEqual(newAvailibility.getEndDate())))
             .map(newAvailibility -> availabilityRepository.save(newAvailibility))
             .collect(Collectors.toList());
     }
 
-    private List<Availability> generateIntervals(TimeSlot timeSlot) {
+    private List<Availability> generateIntervals(List<Appointment> currentAppointments, TimeSlot timeSlot) {
         List<Availability> availabilities = new ArrayList<>();
-        LocalDateTime currentTimeSlot = timeSlot.getStartDate();
-        List<Appointment> currentAppointments = appointmentRepository.findByPractitionerId(timeSlot.getPractitionerId());
+        LocalDateTime nextTimeSlot = timeSlot.getStartDate();
+        
+        while (nextTimeSlot.isBefore(timeSlot.getEndDate())) {
 
-        while (currentTimeSlot.isBefore(timeSlot.getEndDate())) {
+            Optional<LocalDateTime> appointmentEndDate = findAppointmentStartAtSameTime(currentAppointments, nextTimeSlot);
+            var endDate = appointmentEndDate.orElse(nextTimeSlot.plus(15, ChronoUnit.MINUTES));
 
-           LocalDateTime newEndDate = currentAppointments.stream()
-                .filter(appointment -> atTheSameTime(appointment, timeSlot))
-                .map(appointment -> appointment.getEndDate())
-                .findFirst()
-                .orElse(currentTimeSlot.plus(15, ChronoUnit.MINUTES));
+            if (appointmentEndDate.isEmpty()) {
+                 Availability availability = Availability.builder()
+                    .practitionerId(timeSlot.getPractitionerId())
+                    .startDate(nextTimeSlot)
+                    .endDate(endDate)
+                    .build();
 
-            Availability availability = Availability.builder()
-                .practitionerId(timeSlot.getPractitionerId())
-                .startDate(currentTimeSlot)
-                .endDate(newEndDate)
-                .build();
+                availabilities.add(availability);
+            }
 
-            availabilities.add(availability);
-
-            currentTimeSlot = newEndDate;
+            nextTimeSlot = endDate;
         }
 
         return availabilities;
     }
 
-    private Boolean atTheSameTime(Appointment appointment, TimeSlot timeSlot) {
-        
-        if(timeSlot.getStartDate().isEqual(appointment.getStartDate())) {
+    private Optional<LocalDateTime> findAppointmentStartAtSameTime(List<Appointment> currentAppointments, LocalDateTime availibilityStartTime) {
+        return currentAppointments.stream()
+                .filter(appointment -> atTheSameTime(appointment, availibilityStartTime))
+                .map(appointment -> appointment.getEndDate())
+                .findFirst();
+    }
+
+    private Boolean atTheSameTime(Appointment appointment,  LocalDateTime availibilityStartTime) { 
+        if(availibilityStartTime.isEqual(appointment.getStartDate())) {
             return true;
-        } else if(timeSlot.getStartDate().isAfter(appointment.getStartDate()) && timeSlot.getStartDate().isBefore(appointment.getEndDate())) {
+        } else if(availibilityStartTime.isAfter(appointment.getStartDate()) &&availibilityStartTime.isBefore(appointment.getEndDate())) {
             return true;
         } else {
             return false;
