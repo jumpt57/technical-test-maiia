@@ -4,8 +4,11 @@ import com.maiia.pro.entity.Appointment;
 import com.maiia.pro.service.ProAppointmentService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -29,7 +32,11 @@ public class ProAppointmentController {
     }
 
     @PostMapping
-    public Appointment create(Appointment appointment) {
-        return proAppointmentService.create(appointment);
+    public Appointment create(@RequestBody Appointment newAppointment) {
+        try {
+            return proAppointmentService.create(newAppointment);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 }

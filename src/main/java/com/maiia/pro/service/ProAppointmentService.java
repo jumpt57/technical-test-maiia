@@ -9,8 +9,12 @@ import java.util.List;
 
 @Service
 public class ProAppointmentService {
+
     @Autowired
     private AppointmentRepository appointmentRepository;
+
+    @Autowired
+    private ProAvailabilityService availabilityService;
 
     public Appointment find(String appointmentId) {
         return appointmentRepository.findById(appointmentId).orElseThrow();
@@ -24,7 +28,13 @@ public class ProAppointmentService {
         return appointmentRepository.findByPractitionerId(practitionerId);
     }
 
-    public Appointment create(Appointment appointment) {
-        return appointmentRepository.save(appointment);
+    public Appointment create(Appointment newAppointment) {
+        List<Appointment> appointments = appointmentRepository.findByPractitionerId(newAppointment.getPractitionerId());
+
+        if (appointments.stream().anyMatch(appointment -> appointment.getStartDate().isEqual(newAppointment.getStartDate()) && appointment.getEndDate().isEqual(newAppointment.getEndDate()))) {
+            throw new IllegalArgumentException("Appointement for this practitioner already exists at that time !");
+        } else {
+            return appointmentRepository.save(newAppointment);
+        }
     }
 }

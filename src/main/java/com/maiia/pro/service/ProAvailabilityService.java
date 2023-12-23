@@ -12,11 +12,10 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import java.time.temporal.ChronoUnit;
 
-import static org.mockito.ArgumentMatchers.same;
 
 import java.time.LocalDateTime;
 
@@ -39,21 +38,15 @@ public class ProAvailabilityService {
     public List<Availability> generateAvailabilities(Integer practitionerId) {
 
         List<TimeSlot> timeSlots = timeSlotRepository.findByPractitionerId(practitionerId);
-        List<Availability> currentAvailabilities = availabilityRepository.findByPractitionerId(practitionerId);
-        List<Appointment> currentAppointments = appointmentRepository.findByPractitionerId(practitionerId);
-
-        List<Availability> validatedAvailabilities = currentAvailabilities.stream()
-            .filter(availability -> !malformed(availability))
+        List<Appointment> appointments = appointmentRepository.findByPractitionerId(practitionerId);
+        
+        List<Availability> availabilities = timeSlots.stream()
+            .flatMap(timeSlot -> generateAvailability(appointments, timeSlot).stream())
             .collect(Collectors.toList());
 
-        currentAvailabilities.stream()
-            .filter(this::malformed)
-            .forEach(availabilityRepository::delete);
+        availabilityRepository.deleteAll();
 
-        return timeSlots.stream()
-            .flatMap(timeSlot -> generateAvailability(currentAppointments, timeSlot).stream())
-            .filter(availability -> unique(validatedAvailabilities, availability))
-            .map(availabilityRepository::save)
+        return StreamSupport.stream(availabilityRepository.saveAll(availabilities).spliterator(), false)
             .collect(Collectors.toList());
     }
 
@@ -61,9 +54,9 @@ public class ProAvailabilityService {
         List<Availability> availabilities = new ArrayList<>();
         LocalDateTime nextTimeSlot = timeSlot.getStartDate();
 
-        int maxRun = 999;
+        int limit = 96; // Hard limit to avoid infinite loop 96 is the number of 15 minutes slots in one day
         
-        while (nextTimeSlot.isBefore(timeSlot.getEndDate()) && maxRun != 0) {
+        while (nextTimeSlot.isBefore(timeSlot.getEndDate()) && limit != 0) {
 
             Optional<LocalDateTime> appointmentEndDate = findAppointmentStartAtSameTime(currentAppointments, nextTimeSlot);
             var endDate = appointmentEndDate.orElse(nextTimeSlot.plus(15, ChronoUnit.MINUTES));
@@ -80,7 +73,7 @@ public class ProAvailabilityService {
 
             nextTimeSlot = endDate;
 
-            maxRun--;
+            limit--;
         }
 
         return availabilities;
@@ -97,16 +90,6 @@ public class ProAvailabilityService {
         var availabilityEndDate = availibilityStartTime.plus(15, ChronoUnit.MINUTES);
         return !((availibilityStartTime.isBefore(appointment.getStartDate()) && (availabilityEndDate.isBefore(appointment.getStartDate()) || availabilityEndDate.isEqual(appointment.getStartDate())) ) ||
             ((availibilityStartTime.isAfter(appointment.getEndDate()) || availibilityStartTime.isEqual(appointment.getEndDate())) && availabilityEndDate.isAfter(appointment.getEndDate())));
-    }
-
-
-    private Boolean unique(List<Availability> currentAvailabilities, Availability newAvailibility) {
-        return !currentAvailabilities.stream()
-                .anyMatch(availibility -> availibility.getStartDate().isEqual(newAvailibility.getStartDate()) && availibility.getEndDate().isEqual(newAvailibility.getEndDate()));
-    }
-
-    private Boolean malformed(Availability availability) {
-        return !availability.getStartDate().isBefore(availability.getEndDate());
     }
 
 }

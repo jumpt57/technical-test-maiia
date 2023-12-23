@@ -19,6 +19,6 @@ public class ProAvailabilityController {
     @ApiOperation(value = "Get availabilities by practitionerId")
     @GetMapping
     public List<Availability> getAvailabilities(@RequestParam final Integer practitionerId) {
-        return proAvailabilityService.findByPractitionerId(practitionerId);
+        return proAvailabilityService.generateAvailabilities(practitionerId);
     }
 }
