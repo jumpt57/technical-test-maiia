@@ -13,9 +13,6 @@ public class ProAppointmentService {
     @Autowired
     private AppointmentRepository appointmentRepository;
 
-    @Autowired
-    private ProAvailabilityService availabilityService;
-
     public Appointment find(String appointmentId) {
         return appointmentRepository.findById(appointmentId).orElseThrow();
     }
