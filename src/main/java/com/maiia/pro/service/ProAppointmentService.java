@@ -2,7 +2,6 @@ package com.maiia.pro.service;
 
 import com.maiia.pro.entity.Appointment;
 import com.maiia.pro.repository.AppointmentRepository;
-import com.maiia.pro.utils.TimeSlotComparator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
