@@ -51,7 +51,7 @@ public class ProAvailabilityService {
             .collect(Collectors.toList());
     }
 
-    private List<Availability> generateAvailability(List<Appointment> currentAppointments, TimeSlot timeSlot) {
+    private List<Availability> generateAvailability(List<Appointment> appointments, TimeSlot timeSlot) {
         List<Availability> availabilities = new ArrayList<>();
         LocalDateTime nextTimeSlot = timeSlot.getStartDate();
 
@@ -59,20 +59,22 @@ public class ProAvailabilityService {
         
         while (nextTimeSlot.isBefore(timeSlot.getEndDate()) && limit != 0) {
 
-            Optional<LocalDateTime> appointmentEndDate = findAppointmentAtSameTime(currentAppointments, nextTimeSlot);
-            var endDate = appointmentEndDate.orElse(nextTimeSlot.plus(15, ChronoUnit.MINUTES));
-
-            if (appointmentEndDate.isEmpty()) {
-                Availability availability = Availability.builder()
+            Availability newAvailability = Availability.builder()
                     .practitionerId(timeSlot.getPractitionerId())
                     .startDate(nextTimeSlot)
-                    .endDate(endDate)
+                    .endDate(nextTimeSlot.plus(15, ChronoUnit.MINUTES))
                     .build();
 
-                availabilities.add(availability);
+            Optional<LocalDateTime> appointmentEndDate = findAppointmentAtSameTime(appointments, newAvailability);
+            LocalDateTime definitiveEndDate = appointmentEndDate.orElse(newAvailability.getEndDate());
+
+            newAvailability.setEndDate(definitiveEndDate);
+
+            if (appointmentEndDate.isEmpty()) {
+                availabilities.add(newAvailability);
             }
 
-            nextTimeSlot = endDate;
+            nextTimeSlot = definitiveEndDate;
 
             limit--;
         }
@@ -80,16 +82,9 @@ public class ProAvailabilityService {
         return availabilities;
     }
 
-    private Optional<LocalDateTime> findAppointmentAtSameTime(List<Appointment> currentAppointments, LocalDateTime availibilityStartTime) {
-
-        Availability newAppointment = Availability.builder()
-                    .practitionerId(1)
-                    .startDate(availibilityStartTime)
-                    .endDate(availibilityStartTime.plus(15, ChronoUnit.MINUTES))
-                    .build();
-
+    private Optional<LocalDateTime> findAppointmentAtSameTime(List<Appointment> currentAppointments, Availability availibility) {
         return currentAppointments.stream()
-                .filter(appointment -> appointment.atTheSameTime(newAppointment))
+                .filter(appointment -> appointment.atTheSameTime(availibility))
                 .map(Appointment::getEndDate)
                 .findFirst();
     }
