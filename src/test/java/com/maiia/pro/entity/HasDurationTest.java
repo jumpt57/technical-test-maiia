@@ -12,7 +12,43 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class HasDurationTest {
 
     private final  EntityFactory entityFactory = new EntityFactory();
-    private  final static Integer patient_id=657679;
+    private  final static Integer patient_id = 657679;
+
+    @Test()
+    void startBeforeEndAtSameTime() {
+        Practitioner practitioner = entityFactory.createPractitioner();
+        LocalDateTime startDate = LocalDateTime.of(2020, Month.FEBRUARY, 5, 11, 0, 0);
+
+        Appointment a = entityFactory.createAppointment(practitioner.getId(),
+                patient_id,
+                startDate.plusMinutes(30),
+                startDate.plusMinutes(45));
+
+        HasDuration b = entityFactory.createAppointment(practitioner.getId(),
+                patient_id,
+                startDate.plusMinutes(15),
+                startDate.plusMinutes(30));
+
+        assertEquals(a.atTheSameTime(b), false);
+    }
+
+    @Test()
+    void startAfterEndAter() {
+        Practitioner practitioner = entityFactory.createPractitioner();
+        LocalDateTime startDate = LocalDateTime.of(2020, Month.FEBRUARY, 5, 11, 0, 0);
+
+        Appointment a = entityFactory.createAppointment(practitioner.getId(),
+                patient_id,
+                startDate.plusMinutes(30),
+                startDate.plusMinutes(45));
+
+        HasDuration b = entityFactory.createAppointment(practitioner.getId(),
+                patient_id,
+                startDate.plusMinutes(45),
+                startDate.plusMinutes(60));
+
+        assertEquals(a.atTheSameTime(b), false);
+    }
 
     @Test()
     void atSameTime() {
