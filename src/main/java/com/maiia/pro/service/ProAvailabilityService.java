@@ -6,6 +6,7 @@ import com.maiia.pro.entity.TimeSlot;
 import com.maiia.pro.repository.AppointmentRepository;
 import com.maiia.pro.repository.AvailabilityRepository;
 import com.maiia.pro.repository.TimeSlotRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,11 +59,11 @@ public class ProAvailabilityService {
         
         while (nextTimeSlot.isBefore(timeSlot.getEndDate()) && limit != 0) {
 
-            Optional<LocalDateTime> appointmentEndDate = findAppointmentStartAtSameTime(currentAppointments, nextTimeSlot);
+            Optional<LocalDateTime> appointmentEndDate = findAppointmentAtSameTime(currentAppointments, nextTimeSlot);
             var endDate = appointmentEndDate.orElse(nextTimeSlot.plus(15, ChronoUnit.MINUTES));
 
             if (appointmentEndDate.isEmpty()) {
-                 Availability availability = Availability.builder()
+                Availability availability = Availability.builder()
                     .practitionerId(timeSlot.getPractitionerId())
                     .startDate(nextTimeSlot)
                     .endDate(endDate)
@@ -79,17 +80,18 @@ public class ProAvailabilityService {
         return availabilities;
     }
 
-    private Optional<LocalDateTime> findAppointmentStartAtSameTime(List<Appointment> currentAppointments, LocalDateTime availibilityStartTime) {
+    private Optional<LocalDateTime> findAppointmentAtSameTime(List<Appointment> currentAppointments, LocalDateTime availibilityStartTime) {
+
+        Availability newAppointment = Availability.builder()
+                    .practitionerId(1)
+                    .startDate(availibilityStartTime)
+                    .endDate(availibilityStartTime.plus(15, ChronoUnit.MINUTES))
+                    .build();
+
         return currentAppointments.stream()
-                .filter(appointment -> notAtSameTime(appointment, availibilityStartTime))
+                .filter(appointment -> appointment.atTheSameTime(newAppointment))
                 .map(Appointment::getEndDate)
                 .findFirst();
-    }
-
-    private Boolean notAtSameTime(Appointment appointment,  LocalDateTime availibilityStartTime) { 
-        var availabilityEndDate = availibilityStartTime.plus(15, ChronoUnit.MINUTES);
-        return !((availibilityStartTime.isBefore(appointment.getStartDate()) && (availabilityEndDate.isBefore(appointment.getStartDate()) || availabilityEndDate.isEqual(appointment.getStartDate())) ) ||
-            ((availibilityStartTime.isAfter(appointment.getEndDate()) || availibilityStartTime.isEqual(appointment.getEndDate())) && availabilityEndDate.isAfter(appointment.getEndDate())));
     }
 
 }

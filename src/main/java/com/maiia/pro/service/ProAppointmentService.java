@@ -2,6 +2,8 @@ package com.maiia.pro.service;
 
 import com.maiia.pro.entity.Appointment;
 import com.maiia.pro.repository.AppointmentRepository;
+import com.maiia.pro.utils.TimeSlotComparator;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +30,7 @@ public class ProAppointmentService {
     public Appointment create(Appointment newAppointment) {
         List<Appointment> appointments = appointmentRepository.findByPractitionerId(newAppointment.getPractitionerId());
 
-        if (appointments.stream().anyMatch(appointment -> appointment.getStartDate().isEqual(newAppointment.getStartDate()) && appointment.getEndDate().isEqual(newAppointment.getEndDate()))) {
+        if (appointments.stream().anyMatch(appointment -> appointment.atTheSameTime(newAppointment))) {
             throw new IllegalArgumentException("Appointement for this practitioner already exists at that time !");
         } else {
             return appointmentRepository.save(newAppointment);
