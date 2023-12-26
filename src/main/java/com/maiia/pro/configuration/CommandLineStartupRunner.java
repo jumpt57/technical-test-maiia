@@ -25,8 +25,10 @@ public class CommandLineStartupRunner implements CommandLineRunner {
 
     @Autowired
     private PatientRepository patientRepository;
+    
     @Autowired
     private PractitionerRepository practitionerRepository;
+
     @Autowired
     private TimeSlotRepository timeSlotRepository;
 

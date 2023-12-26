@@ -2,6 +2,7 @@ package com.maiia.pro.service;
 
 import com.maiia.pro.entity.Appointment;
 import com.maiia.pro.repository.AppointmentRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +10,7 @@ import java.util.List;
 
 @Service
 public class ProAppointmentService {
+
     @Autowired
     private AppointmentRepository appointmentRepository;
 
@@ -22,5 +24,15 @@ public class ProAppointmentService {
 
     public List<Appointment> findByPractitionerId(Integer practitionerId) {
         return appointmentRepository.findByPractitionerId(practitionerId);
+    }
+
+    public Appointment create(Appointment newAppointment) {
+        List<Appointment> appointments = appointmentRepository.findByPractitionerId(newAppointment.getPractitionerId());
+
+        if (appointments.stream().anyMatch(appointment -> appointment.atTheSameTime(newAppointment))) {
+            throw new IllegalArgumentException("Appointement for this practitioner already exists at that time !");
+        } else {
+            return appointmentRepository.save(newAppointment);
+        }
     }
 }

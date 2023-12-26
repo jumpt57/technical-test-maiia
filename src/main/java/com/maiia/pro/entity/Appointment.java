@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class Appointment {
+public class Appointment implements HasDuration {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;

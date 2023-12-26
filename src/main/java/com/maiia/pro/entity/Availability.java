@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class Availability {
+public class Availability implements HasDuration {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;

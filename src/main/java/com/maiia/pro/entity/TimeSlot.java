@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class TimeSlot {
+public class TimeSlot implements HasDuration {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private Integer id;
